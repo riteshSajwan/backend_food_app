@@ -1,0 +1,57 @@
+# Dependency directories
+node_modules/
+yarn.lock
+package-lock.json
+
+# Build files
+build/
+dist/
+*.log
+*.pid
+*.seed
+*.css
+*.map
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE and editor-specific files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
+*~
+*.log
+*.bak
+*.cache
+*.sql
+*.obj
+*.hprof
+*.DS_Store
+
+# Test coverage directory
+coverage/
+
+# macOS specific files
+.DS_Store
+
+# Windows thumbnail cache files
+Thumbs.db
+
+# Compiled binary extensions
+*.dll
+*.exe
+*.log
+
+# Docker
+#docker-compose.yml
+
+# .eslintcache
+.eslintcache
