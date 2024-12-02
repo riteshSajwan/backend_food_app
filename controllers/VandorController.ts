@@ -1,5 +1,5 @@
 import { Request, Response ,NextFunction } from "express";
-import { VandorLoginInputs } from "../dto";
+import { EditVandorInput, VandorLoginInputs } from "../dto";
 import { FindVandor } from "./AdminController";
 import { GenerateSignature, ValidatePassword } from "../utility";
 
@@ -22,9 +22,30 @@ export const VandorLogin = async(req:Request,res:Response,next: NextFunction): P
     res.json({"message":"Login Cred are wrong"})
 }
 export const GetVandorProfile = async(req:Request,res:Response,next: NextFunction): Promise<any>=>{
+    const user = req.user;
+    if(user){
+        const existingVandor = await FindVandor(user._id)
+        return res.json(existingVandor)
+    }
+    return res.json({"message":"Vandor information not found"})
   
 }
 export const UpdateVandorProfile = async(req:Request,res:Response,next: NextFunction): Promise<any>=>{
+    const {foodTypes , name , address, phone} = <EditVandorInput>req.body;
+    const user = req.user;
+    console.log("user",user)
+    if(user){
+        const existingVandor = await FindVandor(user._id)
+        if(existingVandor!==null){
+            existingVandor.name=name;
+            existingVandor.address=address;
+            existingVandor.phone=phone;
+            existingVandor.foodType=foodTypes;
+            const savedResult = await existingVandor.save();
+            return res.json(savedResult)
+        }
+    }
+    return res.json({"message":"Vandor information not found"})
   
 }
 
