@@ -18,7 +18,7 @@ app.use('/vandor',VandorRoute)
 
 const MONGO_URI = process.env.MONGO_URI as string;
 
-
+const APP_SECRET = process.env.APP_SECRET as string;
 mongoose.connect(MONGO_URI)
 .then(() => {
     console.log("Database connected successfully!");

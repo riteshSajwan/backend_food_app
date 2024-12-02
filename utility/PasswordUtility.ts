@@ -3,7 +3,7 @@ import { Request } from 'express';
 import jwt from 'jsonwebtoken'
 import { VandorPayload } from '../dto';
 // import { APP_SECRET } from '../config';
-const APP_SECRET = process.env.APP_SECRET as string;
+const APP_SECRET = process.env.APP_SECRET ||'testsetestset' as string;
 import { AuthPayload } from '../dto';
 
 export const GenerateSalt = async ()=>{
@@ -25,7 +25,7 @@ export const GenerateSignature = (payloads:VandorPayload)=>{
 export const ValidateSignature = async (req: any): Promise<boolean> => {
     const signature  = req.get('Authorization')
     if(signature){
-        const payload = await jwt.verify(signature.split('')[1],APP_SECRET) as AuthPayload
+        const payload = await jwt.verify(signature.split(' ')[1],APP_SECRET) as AuthPayload
         req.user = payload;
         return true;
     }
