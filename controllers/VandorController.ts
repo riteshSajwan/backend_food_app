@@ -2,6 +2,8 @@ import { Request, Response ,NextFunction } from "express";
 import { EditVandorInput, VandorLoginInputs } from "../dto";
 import { FindVandor } from "./AdminController";
 import { GenerateSignature, ValidatePassword } from "../utility";
+import { CreateFoodInputs } from "../dto/Food.dto";
+import { Food } from "../models";
 
 
 export const VandorLogin = async(req:Request,res:Response,next: NextFunction): Promise<any>=>{
@@ -21,6 +23,7 @@ export const VandorLogin = async(req:Request,res:Response,next: NextFunction): P
     }
     res.json({"message":"Login Cred are wrong"})
 }
+
 export const GetVandorProfile = async(req:Request,res:Response,next: NextFunction): Promise<any>=>{
     const user = req.user;
     if(user){
@@ -33,7 +36,6 @@ export const GetVandorProfile = async(req:Request,res:Response,next: NextFunctio
 export const UpdateVandorProfile = async(req:Request,res:Response,next: NextFunction): Promise<any>=>{
     const {foodTypes , name , address, phone} = <EditVandorInput>req.body;
     const user = req.user;
-    console.log("user",user)
     if(user){
         const existingVandor = await FindVandor(user._id)
         if(existingVandor!==null){
@@ -50,5 +52,59 @@ export const UpdateVandorProfile = async(req:Request,res:Response,next: NextFunc
 }
 
 export const UpdateVandorService = async(req:Request,res:Response,next: NextFunction): Promise<any>=>{
+    const user = req.user;
+    console.log("user",user)
+    if(user){
+        const existingVandor = await FindVandor(user._id)
+        if(existingVandor!==null){
+            existingVandor.serviceAvailable=!existingVandor.serviceAvailable;
+            const savedResult = await existingVandor.save();
+            return res.json(savedResult)
+        }
+        return res.json(existingVandor);
+    }
+    return res.json({"message":"Vandor information not found"})
+  
+}
+
+export const AddFood = async(req:Request,res:Response,next: NextFunction): Promise<any>=>{
+    const user = req.user;
+    
+    if(user){
+        const {name,description,category,foodType,price,readyTime}= <CreateFoodInputs>req.body;
+        const vandor = await FindVandor(user._id)
+        if(vandor!==null){
+            const files = req.files as [Express.Multer.File]  //desctructing multer file
+            console.log("files",files)
+            const images = files.map((file: Express.Multer.File) => file.filename)
+            console.log("images",images)
+            const createdFood = await Food.create({
+                vandorId:vandor.id,
+                name:name,
+                description:description,
+                category:category,
+                foodType:foodType,
+                images:images,
+                readyTime:readyTime,
+                price:price
+            });
+            vandor.foods.push(createdFood);
+            const result = await vandor.save();
+            return res.json(result);
+        }
+    }
+    return res.json({"message":"Something went wrong"})
+  
+}
+
+export const GetFoods = async(req:Request,res:Response,next: NextFunction): Promise<any>=>{
+    const user = req.user;
+    if(user){
+        const foods = await Food.find({vandorId:user._id})
+        if(foods!==null){
+            return res.json(foods);
+        }
+    }
+    return res.json({"message":"Something went wrong"})
   
 }
