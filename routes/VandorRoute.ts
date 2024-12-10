@@ -1,5 +1,5 @@
 import express, { Request, Response ,NextFunction } from 'express';
-import { VandorLogin , GetVandorProfile, UpdateVandorProfile, UpdateVandorService, AddFood, GetFoods, UpdateVandorCoverImage } from '../controllers/VandorController';
+import { VandorLogin , GetVandorProfile, UpdateVandorProfile, UpdateVandorService, AddFood, GetFoods, UpdateVandorCoverImage } from '../controllers';
 import { Authenticate } from '../middlewares';
 import multer from 'multer';
 
