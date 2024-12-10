@@ -13,9 +13,8 @@ declare global {
 export const Authenticate: RequestHandler = async (req, res, next) => {
   try {
     const signature = await ValidateSignature(req);
-    // console.log("signature2",signature)
     if (signature) {
-      next(); // Call next middleware or route handler
+      next(); 
     } else {
       res.status(401).json({ message: "User Not Authorized" });
     }
