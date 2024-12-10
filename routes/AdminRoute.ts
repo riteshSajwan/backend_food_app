@@ -1,5 +1,5 @@
 import express, { Request, Response ,NextFunction } from 'express';
-import { CreateVandor, GetVandor, GetVandorByID } from '../controllers/AdminController';
+import { CreateVandor, GetVandor, GetVandorByID } from '../controllers';
 
 const router = express.Router();
 
