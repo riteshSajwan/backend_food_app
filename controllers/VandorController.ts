@@ -50,6 +50,22 @@ export const UpdateVandorProfile = async(req:Request,res:Response,next: NextFunc
     return res.json({"message":"Vandor information not found"})
   
 }
+export const UpdateVandorCoverImage = async(req:Request,res:Response,next: NextFunction): Promise<any>=>{
+    const user = req.user;
+    
+    if(user){
+        const vandor = await FindVandor(user._id)
+        if(vandor!==null){
+            const files = req.files as [Express.Multer.File]  //desctructing multer file
+            const images = files.map((file: Express.Multer.File) => file.filename)
+            vandor.coverImages.push(...images);
+            const result = await vandor.save();
+            return res.json(result);
+        }
+    }
+    return res.json({"message":"Something went wrong"})
+  
+}
 
 export const UpdateVandorService = async(req:Request,res:Response,next: NextFunction): Promise<any>=>{
     const user = req.user;
