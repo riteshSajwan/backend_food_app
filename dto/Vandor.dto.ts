@@ -22,7 +22,7 @@ export interface VandorLoginInputs {
 }
 
 export interface VandorPayload {
-    _id:string;
+    _id: string;
     email:string;
     name:string;
     foodTypes:[string];
