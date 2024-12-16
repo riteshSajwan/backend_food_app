@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { CustomerLogin, CustomerSignUp, CustomerVerify, GetCustomerProfile, RequestOtp, EditCustomerProfile } from '../controllers';
+import { CustomerLogin, CustomerSignUp, CustomerVerify, GetCustomerProfile, RequestOtp, EditCustomerProfile, CreateOrder, GetOrders, GetOrderById, AddToCart, GetCart, DeleteCart } from '../controllers';
 import { Authenticate } from '../middlewares';
 
 const router = express.Router();
@@ -16,19 +16,35 @@ router.post('/login',CustomerLogin)
 
 router.use(Authenticate)
 
-/*---------------Verify Customer Account -----------------*/
+/*----------------------Verify Customer Account -----------------*/
 
 router.post('/verify',CustomerVerify)
 
-/*---------------OTP / Requesting OTP -----------------*/
+/*-----------------------OTP / Requesting OTP -----------------*/
 
 router.post('/otp',RequestOtp)
 
-/*---------------Profile -----------------*/
+/*-----------------------Profile -----------------*/
 
 router.post('/profile',GetCustomerProfile)
 
 
 router.patch('/profile',EditCustomerProfile)
+
+/*----------------------Cart Section--------------*/
+
+router.post('/cart',AddToCart)
+router.get('/cart',GetCart)
+router.delete('/cart',DeleteCart)
+
+/*----------------------Payment Section--------------*/
+
+
+/*----------------------Order Section--------------*/
+
+
+router.post('/create-order',CreateOrder);
+router.get('/order',GetOrders);
+router.get('/order/:id',GetOrderById);
 
 export { router as CustomerRoute}

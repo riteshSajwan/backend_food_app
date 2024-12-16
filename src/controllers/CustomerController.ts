@@ -1,10 +1,12 @@
 import { plainToClass } from 'class-transformer';
 import express, { NextFunction, Request, Response } from 'express';
-import { CreateCustomerInputs, EditCustomerrofileInputs, useLoginInputs } from '../dto/Customer.dto';
+import { CreateCustomerInputs, EditCustomerrofileInputs, OrderInputs, useLoginInputs } from '../dto/Customer.dto';
 import { validate, ValidationError } from 'class-validator';
 import { GeneratePassword, GenerateSalt, GenerateSignature, ValidatePassword } from '../utility';
 import { Customer } from '../models/Customer';
 import { GenerateOtp, onRequestOtp } from '../utility/NotificationUtility';
+import { Food } from '../models';
+import { Order } from '../models/Order';
 
 
 export const CustomerSignUp = async (req:Request,res:Response,next:NextFunction):Promise<any> =>{
@@ -37,6 +39,7 @@ export const CustomerSignUp = async (req:Request,res:Response,next:NextFunction)
         verified: false,
         lat: 0,
         lng: 0,
+        orders:[]
     })
     
     if(result){
@@ -157,4 +160,123 @@ export const EditCustomerProfile = async (req:Request,res:Response,next:NextFunc
     }
     return res.status(400).json({message:'Error with Update Customer ...'})
 
+}
+
+
+export const AddToCart = async (req:Request,res:Response,next:NextFunction):Promise<any> => {
+    const customer = req.user;
+    if(customer){
+        const profile = await Customer.findById(customer._id).populate('cart.food');
+        let cartItems = Array();
+        const {_id,unit} = <OrderInputs>req.body;
+        const food = await Food.findById(_id);
+        if(food){
+            if(profile){
+                cartItems = profile.cart;
+                if(cartItems.length>0){
+                    //check and update unit
+                    let existFoodItem = cartItems.filter((item)=> item.food._id.toString()===_id);
+                    if(existFoodItem.length>0){
+                        const index = cartItems.indexOf(existFoodItem[0]);
+                        if(unit > 0){
+                            cartItems[index]={food,unit};
+                        }else{
+                            cartItems.splice(index,1);
+                        }
+                    }
+                    else{
+                        cartItems.push({food,unit})
+                    }
+
+                }
+                else{
+                    //add new item to cart
+                    cartItems.push({food,unit})
+                }
+            }
+        }
+    }
+    return res.status(400).json({message:'Unable to create Cart'})
+    
+
+}
+export const GetCart = async (req:Request,res:Response,next:NextFunction):Promise<any> => {
+
+}
+export const DeleteCart = async (req:Request,res:Response,next:NextFunction):Promise<any> => {
+
+}
+
+
+export const CreateOrder = async (req:Request,res:Response,next:NextFunction):Promise<any> => {
+    
+    //grab current login customer
+    const customer = req.user;
+    if(customer){
+
+        //crete order ID
+        const orderId = `${Math.floor(Math.random()+ 89999)+1000}`;
+        const profile = await Customer.findById(customer._id);
+
+        //Grab order items from request | {id:xx , unit: xx}
+        const cart = <[OrderInputs]>req.body;
+        let cartItems = Array();
+        let netAmount:number = 0.0;
+        //Cal order amount
+        const foods = await Food.find().where('_id').in(cart.map(item => item._id)).exec(); 
+
+        foods.map(food =>{
+            cart.map(({_id,unit})=>{
+                if(food._id == _id){
+                    netAmount += (food.price*unit);
+                    cartItems.push({food,unit});
+                }
+            })
+        })
+
+        
+    // Cretae Order with item Description
+    if(cartItems){
+        const currentOrder = await Order.create({
+            orderID: orderId,
+            items: cartItems,
+            totalAmount: netAmount,
+            orderDate: new Date(),
+            paidThrough: 'COD',
+            paymentResponse:'',
+            orderStatus: 'Waiting'
+        })
+        if(currentOrder){
+            profile.orders.push(currentOrder);
+            await profile.save();
+            //Finally update orders to user account
+            return res.status(200).json(currentOrder);
+        }
+    } }
+
+    return res.status(400).json({message:"Error with Create Order"})
+
+    
+}
+export const GetOrders = async (req:Request,res:Response,next:NextFunction):Promise<any> => {
+    const customer = req.user;
+    if(customer){
+        const profile = await Customer.findById(customer._id).populate("orders");
+        if(profile){
+            return res.status(200).json(profile.orders);
+        }
+    }
+    return res.status(400).json({message:"Error in get Order API"})
+}
+
+export const GetOrderById = async (req:Request,res:Response,next:NextFunction):Promise<any> => {
+    const orderId = req.params.id;
+    if(orderId){
+        const order = await Order.findById(orderId).populate("items.food");
+        if(order){
+            return res.status(200).json(order);
+        }
+    }
+    return res.status(400).json({message:"Error in get Order By id API"})
+    
 }
