@@ -194,17 +194,39 @@ export const AddToCart = async (req:Request,res:Response,next:NextFunction):Prom
                     cartItems.push({food,unit})
                 }
             }
+            if(cartItems){
+                profile.cart = cartItems as any;
+                const cartResult = await profile.save();
+                return res.status(200).json(cartResult.cart);
+            }
         }
     }
     return res.status(400).json({message:'Unable to create Cart'})
     
-
 }
-export const GetCart = async (req:Request,res:Response,next:NextFunction):Promise<any> => {
 
+export const GetCart = async (req:Request,res:Response,next:NextFunction):Promise<any> => {
+    const customer = req.user;
+    if(customer){
+        const profile = (await Customer.findById(customer._id)).populated('cart.food');
+        if(profile){
+            return res.status(200).json(profile.cart);
+        }
+    }
+    return res.status(400).json({message:'Cart is empty!'})
 }
 export const DeleteCart = async (req:Request,res:Response,next:NextFunction):Promise<any> => {
-
+    const customer = req.user;
+    if(customer){
+        const profile = (await Customer.findById(customer._id)).populated('cart.food');
+        if(profile){
+            profile.cart = [] as any;
+            const cartResult = await profile.save();
+            return res.status(200).json(cartResult);
+        }
+    }
+    return res.status(400).json({message:'Cart is already empty!'})
+    
 }
 
 
@@ -222,12 +244,14 @@ export const CreateOrder = async (req:Request,res:Response,next:NextFunction):Pr
         const cart = <[OrderInputs]>req.body;
         let cartItems = Array();
         let netAmount:number = 0.0;
+        let vandorId;
         //Cal order amount
         const foods = await Food.find().where('_id').in(cart.map(item => item._id)).exec(); 
 
         foods.map(food =>{
             cart.map(({_id,unit})=>{
                 if(food._id == _id){
+                    vandorId= food.vandorId
                     netAmount += (food.price*unit);
                     cartItems.push({food,unit});
                 }
@@ -239,19 +263,30 @@ export const CreateOrder = async (req:Request,res:Response,next:NextFunction):Pr
     if(cartItems){
         const currentOrder = await Order.create({
             orderID: orderId,
+            vandorId:vandorId,
             items: cartItems,
             totalAmount: netAmount,
             orderDate: new Date(),
             paidThrough: 'COD',
             paymentResponse:'',
-            orderStatus: 'Waiting'
+            orderStatus: 'Waiting',
+            remarks:'',
+            deliveryId:'',
+            appliedOffers:false,
+            offerId: null,
+            readyTime:45,
         })
-        if(currentOrder){
-            profile.orders.push(currentOrder);
-            await profile.save();
-            //Finally update orders to user account
-            return res.status(200).json(currentOrder);
-        }
+        profile.cart= [] as any;
+        profile.orders.push(currentOrder);
+        const profileSaveResponse = await profile.save();
+        return res.status(200).json(profileSaveResponse);
+
+        // if(currentOrder){
+        //     profile.orders.push(currentOrder);
+        //     await profile.save();
+        //     //Finally update orders to user account
+        //     return res.status(200).json(currentOrder);
+        // }
     } }
 
     return res.status(400).json({message:"Error with Create Order"})
