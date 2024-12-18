@@ -1,4 +1,4 @@
-import {AuthPayload } from '../dto'
+
 
 declare namespace NodeJS {
     interface ProcessEnv {
